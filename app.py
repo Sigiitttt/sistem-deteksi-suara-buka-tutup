@@ -1,8 +1,6 @@
 import streamlit as st
 import numpy as np
 import pickle
-import sounddevice as sd
-from scipy.io.wavfile import write
 import tempfile
 import os
 from extract_features import extract_features
@@ -13,6 +11,7 @@ from extract_features import extract_features
 with open("voice_model.pkl", "rb") as f:
     model = pickle.load(f)
 
+st.set_page_config(page_title="Deteksi Suara Buka/Tutup", page_icon="🎙️")
 st.title("🎙️ Sistem Deteksi Suara - Buka / Tutup")
 st.markdown("Upload file suara atau rekam langsung untuk mendeteksi kata.")
 
@@ -44,20 +43,18 @@ if uploaded_file is not None:
             st.success(f"Hasil Deteksi: {hasil}")
 
 # ==============================
-# Rekam Suara Langsung
+# Rekam Langsung (Browser Mic)
 # ==============================
-st.header("🎤 Rekam Langsung")
-duration = st.slider("Durasi Rekaman (detik):", 1, 5, 2)
+st.header("🎤 Rekam Langsung (Browser)")
 
-if st.button("🎙️ Mulai Rekam"):
-    st.info("Sedang merekam... Silakan ucapkan 'buka' atau 'tutup'")
-    fs = 16000
-    recording = sd.rec(int(duration * fs), samplerate=fs, channels=1)
-    sd.wait()
-    
-    temp_wav = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
-    write(temp_wav.name, fs, recording)
-    st.audio(temp_wav.name)
-    
-    hasil = predict(temp_wav.name)
-    st.success(f"Hasil Deteksi: {hasil}")
+# Fitur baru Streamlit (v1.32+)
+audio_data = st.audio_recorder("Klik tombol mic untuk merekam")
+
+if audio_data:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio:
+        temp_audio.write(audio_data)
+        st.audio(temp_audio.name)
+
+        if st.button("🎯 Deteksi dari Rekaman"):
+            hasil = predict(temp_audio.name)
+            st.success(f"Hasil Deteksi: {hasil}")
