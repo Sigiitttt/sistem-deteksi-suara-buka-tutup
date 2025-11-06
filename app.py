@@ -4,6 +4,7 @@ import pickle
 import tempfile
 import os
 from extract_features import extract_features
+from st_audiorec import st_audiorec  # komponen untuk rekam di browser
 
 # ==============================
 # Load Model
@@ -13,7 +14,7 @@ with open("voice_model.pkl", "rb") as f:
 
 st.set_page_config(page_title="Deteksi Suara Buka/Tutup", page_icon="🎙️")
 st.title("🎙️ Sistem Deteksi Suara - Buka / Tutup")
-st.markdown("Upload file suara atau rekam langsung untuk mendeteksi kata.")
+st.markdown("Upload file suara atau rekam langsung dari browser untuk mendeteksi kata.")
 
 # ==============================
 # Fungsi Prediksi
@@ -45,16 +46,14 @@ if uploaded_file is not None:
 # ==============================
 # Rekam Langsung (Browser Mic)
 # ==============================
-st.header("🎤 Rekam Langsung (Browser)")
+st.header("🎤 Rekam Langsung dari Browser")
 
-# Fitur baru Streamlit (v1.32+)
-audio_data = st.audio_recorder("Klik tombol mic untuk merekam")
+wav_audio_data = st_audiorec()
 
-if audio_data:
+if wav_audio_data is not None:
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio:
-        temp_audio.write(audio_data)
+        temp_audio.write(wav_audio_data)
         st.audio(temp_audio.name)
-
         if st.button("🎯 Deteksi dari Rekaman"):
             hasil = predict(temp_audio.name)
             st.success(f"Hasil Deteksi: {hasil}")
